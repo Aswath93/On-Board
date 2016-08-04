@@ -6,11 +6,18 @@
 #include <actionlib/client/simple_action_client.h>
 #include <actionlib/client/terminal_state.h>
 
+
+////////////////////////////////////////////////////////////////
+/* TODO change the frame of reference to the body of the aircraft , the flag in  attitude control*/
+///////////////////////////////////////////////////////////////
+
+
 using namespace DJI::onboardSDK;
 
 std::vector<float> obs_dist;
 int sensor_num;
-float obstacle_dist_thresh = 1.5;
+const float obstacle_dist_thresh = 1.5;
+const float x_vel = 0.3;
 
 void get_dist(const sensor_msgs::LaserScan::ConstPtr& dist)
 {
@@ -29,12 +36,8 @@ void get_dist(const sensor_msgs::LaserScan::ConstPtr& dist)
 int stop_drone(DJIDrone* drone)
 {
      drone->attitude_control(0x40, 0, 0, 0, 0);
-
      usleep(20000);
-     //ROS_INFO("landing");
-     //drone->landing();
-     //usleep(20000);
-    return 1;
+     return 1;
 }
 
 void move_fwd(DJIDrone* drone)
@@ -46,6 +49,7 @@ void move_fwd(DJIDrone* drone)
 
 void land(DJIDrone* drone)
 {
+    ROS_INFO("LANDING DRONE");
     drone->landing();
     usleep(20000);
 }
@@ -107,7 +111,8 @@ int main(int argc,char** argv)
                 sleep(10);
                 land(drone);
                 sleep(2);
-
+                drone->release_sdk_permission_control();
+                ROS_INFO("Released control");
                 break;
 
             }
