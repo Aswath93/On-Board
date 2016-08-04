@@ -9,27 +9,71 @@
 using namespace DJI::onboardSDK;
 
 std::vector<float> obs_dist;
+int sensor_num;
+float obstacle_dist_thresh = 1.5;
 
 void get_dist(const sensor_msgs::LaserScan::ConstPtr& dist)
 {
     obs_dist=dist->ranges;
     if(obs_dist.size()!=0)
     {
-        //ROS_INFO("inside callbak");
-        //ROS_INFO("The distance to obstacle 1 : %f",obs_dist[0]);
+        ROS_INFO("inside callbak");
+        ROS_INFO("The distance to obstacle 1 : %f",obs_dist[0]);
         ROS_INFO("The distance to obstacle 2 : %f",obs_dist[1]);
-        //ROS_INFO("The distance to obstacle 3 : %f",obs_dist[2]);
-        //ROS_INFO("The distance to obstacle 4 : %f",obs_dist[3]);
-        //ROS_INFO("The distance to obstacle 5 : %f",obs_dist[4]);
+        ROS_INFO("The distance to obstacle 3 : %f",obs_dist[2]);
+        ROS_INFO("The distance to obstacle 4 : %f",obs_dist[3]);
+        ROS_INFO("The distance to obstacle 5 : %f",obs_dist[4]);
     }
 }
 
-/*void stop_drone(DJIDrone* drone)
+int stop_drone(DJIDrone* drone)
 {
-    ROS_INFO("OBSTACLE DETECTED!!\nstopping drone!!");
      drone->attitude_control(0x40, 0, 0, 0, 0);
+
      usleep(20000);
-}*/
+     //ROS_INFO("landing");
+     //drone->landing();
+     //usleep(20000);
+    return 1;
+}
+
+void move_fwd(DJIDrone* drone)
+{
+
+    drone->attitude_control(0x40, x_vel, 0, 0, 0);
+    usleep(20000);
+}
+
+void land(DJIDrone* drone)
+{
+    drone->landing();
+    usleep(20000);
+}
+
+bool is_obs()
+{
+
+    for (int i=1;i<5;i++)
+    {
+        if(obs_dist[i] < obstacle_dist_thresh)
+        {
+            sensor_num = i;
+            ROS_INFO("OBSTACLE DETECTED in sensor location %d!!\nstopping drone!!",sensor_num);
+            return 1;
+        }
+    }
+    return 0;
+    /*if (obs_dist[0] < 1 | obs_dist[1] < 1 | obs_dist[2] < 1 | obs_dist[3] < 1 | obs_dist[4] < 1 )
+    {
+        ROS_INFO("OBSTACLE DETECTED!!\nstopping drone!!");
+        sensor_num =
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }*/
+}
 
 int main(int argc,char** argv)
 {
@@ -43,7 +87,7 @@ int main(int argc,char** argv)
     ROS_INFO("Taking off");
     usleep(20000);
     sleep(10);
-    drone->attitude_control(0x40, .5, 0, 0, 0);
+    move_fwd(drone);
     ROS_INFO("MOving forward");
     usleep(20000);
 
@@ -56,26 +100,27 @@ int main(int argc,char** argv)
         ros::spinOnce();
 
         if (obs_dist.size() != 0)
+        {
+            if (is_obs()==1)
             {
-                if (obs_dist[1] < 0.5)
-                    {
+                stop_drone(drone);
+                sleep(10);
+                land(drone);
+                sleep(2);
 
-                         drone->attitude_control(0x40, 0, 0, 0, 0);
-                         ROS_INFO("OBSTACLE DETECTED!!\nstopping drone!!");
-                         usleep(20000);
-                         sleep(10);
-                         ROS_INFO("landing");
-                         drone->landing();
-                         usleep(20000);
-                         break;
-                    }
-                    else
-                    {
-                        drone->attitude_control(0x40, .5, 0, 0, 0);
-                        usleep(20000);
-                    }
+                break;
 
             }
+            else
+            {
+                move_fwd(drone);
+            }
+
+        }
+        else
+        {
+         ROS_INFO("guidance is off");
+        }
 
     }
     return 0;
