@@ -19,6 +19,8 @@ find_package(catkin REQUIRED COMPONENTS
 
 )
 
+find_package( PkgConfig REQUIRED )
+pkg_check_modules( ncurses++ REQUIRED ncurses++ )
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -72,6 +74,8 @@ add_message_files(
   WaypointList.msg
   TransparentTransmissionData.msg
   TimeStamp.msg
+
+  obs_msg.msg
 
   MissionPushInfo.msg
   MissionWaypointAction.msg
@@ -192,6 +196,14 @@ add_executable(obs_avoid
   src/obs_avoid.cpp
 )
 
+add_executable(dji_teleop
+  src/dji_teleop.cpp
+)
+
+add_executable(controller
+  src/controller.cpp
+)
+
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 add_dependencies(dji_sdk_node
@@ -204,6 +216,15 @@ target_link_libraries(dji_sdk_node
 )
 target_link_libraries(obs_avoid
   ${catkin_LIBRARIES}
+)
+
+target_link_libraries(controller
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(dji_teleop
+  ${catkin_LIBRARIES}
+  ncurses
 )
 
 #############
