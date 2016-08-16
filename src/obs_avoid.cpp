@@ -98,7 +98,7 @@ int main(int argc,char** argv)
     obs_msg.sensor_4=true;
 
 
-ROS_INFO("initialized sensor");
+    ROS_INFO("initialized sensor");
 
 
 
